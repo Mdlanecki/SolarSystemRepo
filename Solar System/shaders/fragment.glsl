@@ -28,7 +28,7 @@ void main(){
     // Specular 
     vec3 viewDir = normalize(u_viewPos - v_worldPos);
     vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 25.0);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 20.0);
     vec3 specular = vec3(1.0, 0.9, 0.7) * spec;
 
     // Final Colour using Phong Model

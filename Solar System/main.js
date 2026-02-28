@@ -86,11 +86,6 @@ async function main(){
     const uViewPosLoc  = gl.getUniformLocation(program, "u_viewPos");
     const uIsSunLoc    = gl.getUniformLocation(program, "u_isSun");
 
-    console.log("uLightPosLoc =", uLightPosLoc);
-    console.log("uViewPosLoc  =", uViewPosLoc);
-    console.log("uIsSunLoc    =", uIsSunLoc);
-
-
     /*
     // Set light positions
     gl.uniform3f(uLightPosLoc, -20.0, 5.0, -20.0);
@@ -105,11 +100,12 @@ async function main(){
     mat4.lookAt(view, [0, 5, 15], [0, 0, 0], [0, 1, 0]); // eye, target, up
     gl.uniformMatrix4fv(uViewLoc, false, view);
 
-    
     // Pass camera position to shader for Phong specular
     const cameraPos = [0, 5, 15];
     gl.uniform3f(uViewPosLoc, cameraPos[0], cameraPos[1], cameraPos[2]);
 
+
+    
     // Draw Scene
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
