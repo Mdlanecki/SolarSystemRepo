@@ -6,8 +6,15 @@ varying vec3 v_worldPos;
 uniform vec3 u_lightPos;
 uniform vec3 u_viewPos;
 uniform vec3 u_color;
+uniform int u_isSun;
 
 void main(){
+
+    if (u_isSun == 1) {
+        gl_FragColor = vec4(u_color, 1.0);
+        return;
+    }
+
     vec3 normal = normalize(v_normal);
 
     // Diffuse 
