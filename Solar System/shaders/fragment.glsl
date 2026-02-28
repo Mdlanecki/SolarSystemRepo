@@ -8,26 +8,21 @@ uniform vec3 u_viewPos;
 uniform vec3 u_color;
 
 void main(){
-    vec3 ka = vec3(0.0,0.1,0.0); // ambient coefficients
-    vec3 kd = vec3(0.0,0.4,0.0); // diffuse coefficients
-    vec3 ks = vec3(0.5,0.5,0.5); // specular coefficients
-    float se = 25.0; // specular power constant
-
     vec3 normal = normalize(v_normal);
 
-    // Diffuse Lightin
-    vec3 lightDir = normalize(u_lightPos - v_worldPos); // Fragment to light
+    // Diffuse 
+    vec3 lightDir = normalize(u_lightPos - v_worldPos);
     float diff = max(dot(normal, lightDir), 0.0);
     vec3 diffuse = u_color * diff;
 
-    // Ambient Lighting
-    vec3 ambient = ka * u_color;
+    // Ambient 
+    vec3 ambient = 0.2 * u_color;
 
-    // Specular Lighting 
-    vec3 viewDir = normalize(u_viewPos, v_wordPos); //Fragment to Camera
-    vec3 reflectDir = reflect(-lightDir, normal); 
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), se);
-    vec3 specular = ks * spec;
+    // Specular 
+    vec3 viewDir = normalize(u_viewPos - v_worldPos);
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 25.0);
+    vec3 specular = vec3(1.0, 0.9, 0.7) * spec;
 
     // Final Colour using Phong Model
     vec3 color = ambient + diffuse + specular;

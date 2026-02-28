@@ -2,7 +2,6 @@ import { initShaderProgram } from "./shaderManager.js";
 const {mat3, mat4, vec3, vec4} = glMatrix;
 
 
-
 // Camera orbit variables
 let yaw = Math.PI / 4;
 let pitch = Math.PI / 6;
@@ -97,6 +96,11 @@ async function main(){
     mat4.lookAt(view, [0, 5, 15], [0, 0, 0], [0, 1, 0]); // eye, target, up
     gl.uniformMatrix4fv(uViewLoc, false, view);
 
+    // Pass camera position to shader for Phong specular
+    const cameraPos = [0, 5, 15];
+    const uViewPosLoc = gl.getUniformLocation(program, "u_viewPos");
+    gl.uniform3f(uViewPosLoc, cameraPos[0], cameraPos[1], cameraPos[2]);
+
 
 
     // Draw Scene
@@ -121,6 +125,8 @@ async function main(){
     // Animate the movements of the Solar System
     function render(time){
         time *= 0.001; // convert ms to s
+
+        gl.uniform3f(uViewPosLoc, cameraPos[0], cameraPos[1], cameraPos[2]);
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
