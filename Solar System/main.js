@@ -86,6 +86,10 @@ async function main(){
     const uViewPosLoc  = gl.getUniformLocation(program, "u_viewPos");
     const uIsSunLoc    = gl.getUniformLocation(program, "u_isSun");
 
+    console.log("uLightPosLoc =", uLightPosLoc);
+    console.log("uViewPosLoc  =", uViewPosLoc);
+    console.log("uIsSunLoc    =", uIsSunLoc);
+
 
     /*
     // Set light positions
@@ -104,10 +108,7 @@ async function main(){
     
     // Pass camera position to shader for Phong specular
     const cameraPos = [0, 5, 15];
-    uViewPosLoc = gl.getUniformLocation(program, "u_viewPos");
     gl.uniform3f(uViewPosLoc, cameraPos[0], cameraPos[1], cameraPos[2]);
-    
-
 
     // Draw Scene
 
@@ -141,8 +142,8 @@ async function main(){
         // Sun world-space position for light
         let sunWorldPos = vec3.create();
         vec3.transformMat4(sunWorldPos, [0, 0, 0], sunModelAnim);
-        //gl.uniform3f(uLightPosLoc, sunWorldPos[0], sunWorldPos[1], sunWorldPos[2]);
-        gl.uniform3f(uLightPosLoc, 0, 0, 0);
+        gl.uniform3f(uLightPosLoc, sunWorldPos[0], sunWorldPos[1], sunWorldPos[2]);
+        
 
         // Draw Sun (emissive)
         gl.uniform1i(uIsSunLoc, 1);

@@ -14,6 +14,5 @@ void main(){
     mat3 normalMatrix = mat3(transpose(inverse(u_model)));
     v_normal = normalize(normalMatrix * a_normal);
 
-
     gl_Position = u_projection * u_view * worldPos;
 }
