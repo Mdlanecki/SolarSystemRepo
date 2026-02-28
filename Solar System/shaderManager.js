@@ -36,8 +36,11 @@ function createProgram(gl, vertexShader, fragmentShader){
 }
 
 export async function initShaderProgram(gl){
-    const vertexSource = await loadShaderSource("shaders/vertex.glsl");
+    const vertexSource   = await loadShaderSource("shaders/vertex.glsl");
     const fragmentSource = await loadShaderSource("shaders/fragment.glsl");
+
+    console.log("=== VERTEX SHADER SOURCE ===\n", vertexSource);
+    console.log("=== FRAGMENT SHADER SOURCE ===\n", fragmentSource);
 
     const vertexShader = compileShader(gl, gl.VERTEX_SHADER, vertexSource);
     const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, fragmentSource);

@@ -2,7 +2,6 @@ import { initShaderProgram } from "./shaderManager.js";
 const {mat3, mat4, vec3, vec4} = glMatrix;
 
 
-
 // Camera orbit variables
 let yaw = Math.PI / 4;
 let pitch = Math.PI / 6;
@@ -84,9 +83,13 @@ async function main(){
     const uProjectionLoc = gl.getUniformLocation(program, "u_projection");
     const uColorLoc = gl.getUniformLocation(program, "u_color");
     const uLightPosLoc = gl.getUniformLocation(program, "u_lightPos");
+    const uViewPosLoc  = gl.getUniformLocation(program, "u_viewPos");
+    const uIsSunLoc    = gl.getUniformLocation(program, "u_isSun");
 
+    /*
     // Set light positions
-    gl.uniform3f(uLightPosLoc, 5.0, 20.0, 10.0);
+    gl.uniform3f(uLightPosLoc, -20.0, 5.0, -20.0);
+    */
 
     // Camera setup
     const projection = mat4.create()
@@ -97,8 +100,12 @@ async function main(){
     mat4.lookAt(view, [0, 5, 15], [0, 0, 0], [0, 1, 0]); // eye, target, up
     gl.uniformMatrix4fv(uViewLoc, false, view);
 
+    // Pass camera position to shader for Phong specular
+    const cameraPos = [0, 5, 15];
+    gl.uniform3f(uViewPosLoc, cameraPos[0], cameraPos[1], cameraPos[2]);
 
 
+    
     // Draw Scene
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -120,26 +127,36 @@ async function main(){
 
     // Animate the movements of the Solar System
     function render(time){
-        time *= 0.001; // convert ms to s
+        time *= 0.001;
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        // Sun Animation
+        // Animate Sun
         let sunModelAnim = mat4.clone(sunModel);
-        mat4.rotateY(sunModelAnim, sunModelAnim, time* 0.1);
+        mat4.rotateY(sunModelAnim, sunModelAnim, time * 0.1);
+
+        // Sun world-space position for light
+        let sunWorldPos = vec3.create();
+        vec3.transformMat4(sunWorldPos, [0, 0, 0], sunModelAnim);
+        gl.uniform3f(uLightPosLoc, sunWorldPos[0], sunWorldPos[1], sunWorldPos[2]);
+        
+
+        // Draw Sun (emissive)
+        gl.uniform1i(uIsSunLoc, 1);
         gl.uniformMatrix4fv(uModelLoc, false, sunModelAnim);
         gl.uniform3f(uColorLoc, 1.0, 0.8, 0.1);
         gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
 
-        // Planet Animation
+        // Planet Animation (orbit around sun)
         let planetModelAnim = mat4.create();
         mat4.rotateY(planetModelAnim, planetModelAnim, time * 0.5);
         mat4.translate(planetModelAnim, planetModelAnim, [6, 0, 0]);
+        gl.uniform1i(uIsSunLoc, 0);
         gl.uniformMatrix4fv(uModelLoc, false, planetModelAnim);
         gl.uniform3f(uColorLoc, 0.2, 0.4, 1.0);
         gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
 
-        // Moon Animation
+        // Moon Animation (orbit around planet)
         let moonModelAnim = mat4.clone(planetModelAnim);
         mat4.rotateY(moonModelAnim, moonModelAnim, time * 2.0);
         mat4.translate(moonModelAnim, moonModelAnim, [2, 0, 0]);
@@ -148,7 +165,9 @@ async function main(){
         gl.uniform3f(uColorLoc, 0.7, 0.7, 0.7);
         gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
 
-        // Schedule next frame
+        // Camera position 
+        gl.uniform3f(uViewPosLoc, cameraPos[0], cameraPos[1], cameraPos[2]);
+
         requestAnimationFrame(render);
     }
 
