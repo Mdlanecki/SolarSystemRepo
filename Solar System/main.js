@@ -1,13 +1,15 @@
 import { initShaderProgram } from "./shaderManager.js";
-const {mat3, mat4, vec3, vec4} = glMatrix;
+const {mat3, mat4, vec3, vec4, glMatrix : glm} = glMatrix;
 
 
-// Camera orbit variables
-let yaw = Math.PI / 4;
-let pitch = Math.PI / 6;
-const radius = 20;
-let lastX, lastY;
-let dragging = false;
+// Camera control variables
+let cameraPos   = vec3.fromValues(0, 5, 15);
+let cameraFront = vec3.fromValues(0, 0, -1);
+let cameraUp    = vec3.fromValues(0, 1, 0);
+
+let yaw   = -90;
+let pitch = 0;
+let keys = {};
 
 // Sun model matrix
 let sunModel = mat4.create();
@@ -41,6 +43,42 @@ async function main(){
     gl.useProgram(program);
 
     console.log("Shader program compiled and linked");
+
+
+
+
+
+    //---------------------
+    // User Interaction
+    //---------------------
+    window.addEventListener("keydown", e => keys[e.key] = true);
+    window.addEventListener("keyup", e => keys[e.key] = false);
+
+    canvas.addEventListener("click", () => {
+        if (document.pointerLockElement !== canvas) {
+            canvas.requestPointerLock().catch(err => {
+                console.warn("Pointer lock failed:", err);
+            });
+        }
+    });
+
+    document.addEventListener("mousemove", (e) => {
+        if (document.pointerLockElement !== canvas) return;
+
+        const sensitivity = 0.1;
+        yaw   += e.movementX * sensitivity;
+        pitch -= e.movementY * sensitivity;
+
+        pitch = Math.max(-89, Math.min(89, pitch));
+
+        const front = vec3.create();
+        front[0] = Math.cos(glm.toRadian(yaw)) * Math.cos(glm.toRadian(pitch));
+        front[1] = Math.sin(glm.toRadian(pitch));
+        front[2] = Math.sin(glm.toRadian(yaw)) * Math.cos(glm.toRadian(pitch));
+        vec3.normalize(cameraFront, front);
+    });
+
+
 
 
 
@@ -86,11 +124,6 @@ async function main(){
     const uViewPosLoc  = gl.getUniformLocation(program, "u_viewPos");
     const uIsSunLoc    = gl.getUniformLocation(program, "u_isSun");
 
-    /*
-    // Set light positions
-    gl.uniform3f(uLightPosLoc, -20.0, 5.0, -20.0);
-    */
-
     // Camera setup
     const projection = mat4.create()
     mat4.perspective(projection, Math.PI / 4, canvas.width / canvas.height, 0.1, 100); //fov, aspect, near, far
@@ -100,12 +133,6 @@ async function main(){
     mat4.lookAt(view, [0, 5, 15], [0, 0, 0], [0, 1, 0]); // eye, target, up
     gl.uniformMatrix4fv(uViewLoc, false, view);
 
-    // Pass camera position to shader for Phong specular
-    const cameraPos = [0, 5, 15];
-    gl.uniform3f(uViewPosLoc, cameraPos[0], cameraPos[1], cameraPos[2]);
-
-
-    
     // Draw Scene
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -130,6 +157,20 @@ async function main(){
         time *= 0.001;
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+
+        // Camera Movement
+        const speed = 0.1;
+        let right = vec3.create();
+        vec3.cross(right, cameraFront, cameraUp);
+        vec3.normalize(right, right);
+
+        if (keys["w"]) vec3.scaleAndAdd(cameraPos, cameraPos, cameraFront, speed);
+        if (keys["s"]) vec3.scaleAndAdd(cameraPos, cameraPos, cameraFront, -speed);
+        if (keys["a"]) vec3.scaleAndAdd(cameraPos, cameraPos, right, -speed);
+        if (keys["d"]) vec3.scaleAndAdd(cameraPos, cameraPos, right, speed);
+        if (keys["q"]) vec3.scaleAndAdd(cameraPos, cameraPos, cameraUp, speed);
+        if (keys["e"]) vec3.scaleAndAdd(cameraPos, cameraPos, cameraUp, -speed);
 
         // Animate Sun
         let sunModelAnim = mat4.clone(sunModel);
@@ -166,6 +207,14 @@ async function main(){
         gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
 
         // Camera position 
+
+        let view = mat4.create();
+        let target = vec3.create();
+        vec3.add(target, cameraPos, cameraFront);
+
+        mat4.lookAt(view, cameraPos, target, cameraUp);
+
+        gl.uniformMatrix4fv(uViewLoc, false, view);
         gl.uniform3f(uViewPosLoc, cameraPos[0], cameraPos[1], cameraPos[2]);
 
         requestAnimationFrame(render);
